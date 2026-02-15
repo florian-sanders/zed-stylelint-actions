@@ -1,0 +1,23 @@
+name: 'Update LSP'
+description: 'Check for LSP updates, build, create prerelease, and open PR'
+inputs:
+  version:
+    description: 'LSP version to update to (optional, auto-detects if not provided)'
+    required: false
+  github-token:
+    description: 'GitHub token'
+    required: true
+outputs:
+  updated:
+    description: 'Whether an update was performed'
+  version:
+    description: 'The version that was updated to'
+  pr-number:
+    description: 'The PR number if one was created'
+  pr-url:
+    description: 'The PR URL if one was created'
+  release-url:
+    description: 'The prerelease URL if one was created'
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'

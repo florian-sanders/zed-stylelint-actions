@@ -30,4 +30,5 @@ export default defineConfig([
   actionConfig("./create-draft-release/index.ts"),
   actionConfig("./create-pull-request/index.ts"),
   actionConfig("./publish-release/index.ts"),
+  actionConfig("./update-lsp/index.ts"),
 ]);

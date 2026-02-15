@@ -4,11 +4,12 @@ Reusable GitHub Actions for Zed extension CI/CD workflows.
 
 ## Available Actions
 
+- `update-lsp` - Check for updates, build LSP, create prerelease, and open PR
+- `publish-release` - Publish a release (promotes prerelease or builds from scratch)
 - `build-lsp` - Build the LSP server and commit changes
 - `check-lsp-version` - Check for LSP version updates
 - `create-draft-release` - Create a draft GitHub release
 - `create-pull-request` - Create a pull request
-- `publish-release` - Publish a release (promotes prerelease or builds from scratch)
 
 ## Usage
 
