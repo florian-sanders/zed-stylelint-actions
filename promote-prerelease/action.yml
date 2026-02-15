@@ -1,0 +1,21 @@
+name: 'Promote Prerelease'
+description: 'Promote a prerelease to a full release'
+inputs:
+  version:
+    description: 'Release version/tag'
+    required: true
+  body:
+    description: 'Release body/description'
+    required: false
+    default: ''
+  github-token:
+    description: 'GitHub token'
+    required: true
+outputs:
+  release-id:
+    description: 'ID of the release'
+  release-url:
+    description: 'URL of the release'
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'

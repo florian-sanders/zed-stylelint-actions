@@ -1,0 +1,5 @@
+node_modules/
+*.log
+
+# Keep dist/ tracked - required for GitHub Actions
+# !*/dist/

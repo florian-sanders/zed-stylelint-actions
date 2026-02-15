@@ -1,0 +1,24 @@
+name: 'Publish Release'
+description: 'Create a release with LSP assets'
+inputs:
+  version:
+    description: 'Release version/tag'
+    required: true
+  lsp-version:
+    description: 'LSP version for asset naming'
+    required: true
+  body:
+    description: 'Release body/description'
+    required: false
+    default: ''
+  github-token:
+    description: 'GitHub token'
+    required: true
+outputs:
+  release-id:
+    description: 'ID of the release'
+  release-url:
+    description: 'URL of the release'
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'

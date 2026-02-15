@@ -1,0 +1,37 @@
+name: 'Create Draft Release'
+description: 'Create a draft release with LSP assets attached'
+inputs:
+  lsp-version:
+    description: 'LSP version (e.g., 1.6.0)'
+    required: true
+  version:
+    description: 'Extension version for release tag. Defaults to lsp-version.'
+    required: false
+  github-token:
+    description: 'GitHub token'
+    required: true
+  draft:
+    description: 'Whether to create as draft'
+    required: false
+    default: 'true'
+  prerelease:
+    description: 'Whether to create as prerelease (assets are publicly accessible unlike drafts)'
+    required: false
+    default: 'false'
+  body:
+    description: 'Release body/description'
+    required: false
+    default: ''
+outputs:
+  release-id:
+    description: 'ID of created release'
+    value: ${{ steps.create.outputs.release-id }}
+  release-url:
+    description: 'URL of created release'
+    value: ${{ steps.create.outputs.release-url }}
+  upload-url:
+    description: 'URL for uploading assets'
+    value: ${{ steps.create.outputs.upload-url }}
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'

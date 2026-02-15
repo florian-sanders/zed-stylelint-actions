@@ -1,0 +1,24 @@
+name: 'Build LSP'
+description: 'Build vscode-stylelint language server and commit to lsp/ directory'
+inputs:
+  version:
+    description: 'LSP version to build (e.g., 1.6.0)'
+    required: true
+  git-user-name:
+    description: 'Git user name for commit'
+    required: false
+    default: 'github-actions[bot]'
+  git-user-email:
+    description: 'Git user email for commit'
+    required: false
+    default: 'github-actions[bot]@users.noreply.github.com'
+outputs:
+  lsp-path:
+    description: 'Path to built LSP directory (always "lsp")'
+    value: ${{ steps.build.outputs.lsp-path }}
+  committed:
+    description: 'Whether a commit was made (true/false)'
+    value: ${{ steps.build.outputs.committed }}
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'

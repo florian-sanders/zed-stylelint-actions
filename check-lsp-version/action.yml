@@ -1,0 +1,25 @@
+name: 'Check LSP Version'
+description: 'Check if a new vscode-stylelint version is available'
+inputs:
+  github-token:
+    description: 'GitHub token'
+    required: true
+outputs:
+  update-needed:
+    description: 'Whether an update is needed (true/false)'
+    value: ${{ steps.check.outputs.update-needed }}
+  latest-version:
+    description: 'Latest LSP version (e.g., 1.6.0)'
+    value: ${{ steps.check.outputs.latest-version }}
+  current-version:
+    description: 'Current LSP version in extension.toml'
+    value: ${{ steps.check.outputs.current-version }}
+  changelog:
+    description: 'Changelog/markdown body from latest release'
+    value: ${{ steps.check.outputs.changelog }}
+  existing-pr:
+    description: 'Number of existing LSP update PR, if any'
+    value: ${{ steps.check.outputs.existing-pr }}
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'

@@ -1,0 +1,38 @@
+name: 'Create Pull Request'
+description: 'Create a pull request from the current branch'
+inputs:
+  token:
+    description: 'GitHub token'
+    required: true
+  branch:
+    description: 'Branch name for the PR'
+    required: true
+  base:
+    description: 'Base branch to merge into'
+    required: false
+    default: 'main'
+  title:
+    description: 'PR title'
+    required: true
+  body:
+    description: 'PR body'
+    required: false
+    default: ''
+  draft:
+    description: 'Create as draft PR'
+    required: false
+    default: 'false'
+  maintainer-can-modify:
+    description: 'Allow maintainers to modify'
+    required: false
+    default: 'true'
+outputs:
+  pull-request-number:
+    description: 'The PR number'
+    value: ${{ steps.create.outputs.pull-request-number }}
+  pull-request-url:
+    description: 'The PR URL'
+    value: ${{ steps.create.outputs.pull-request-url }}
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'
