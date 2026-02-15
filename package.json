@@ -1,5 +1,5 @@
 {
-  "name": "@flomusic/zed-stylelint-actions",
+  "name": "@florian-sanders/zed-stylelint-actions",
   "version": "1.0.0",
   "private": true,
   "type": "module",

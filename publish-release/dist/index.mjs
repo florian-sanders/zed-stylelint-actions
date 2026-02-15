@@ -1,9 +1,9 @@
 import { createRequire } from "node:module";
-import { tmpdir } from "os";
-import { join } from "path";
-import { execSync } from "child_process";
+import "os";
+import "path";
+import "child_process";
 import * as fs from "fs/promises";
-import { access, mkdtemp, readFile, readdir, rm, stat, writeFile } from "fs/promises";
+import { readFile } from "fs/promises";
 
 //#region \0rolldown/runtime.js
 var __create = Object.create;
@@ -23637,75 +23637,6 @@ async function readExtensionToml(filePath = "extension.toml") {
 //#region shared/src/exec.ts
 var import_io = require_io();
 var import_exec = /* @__PURE__ */ __toESM(require_exec(), 1);
-async function execWithLog(command, args, options) {
-	import_core.info(`Executing: ${command} ${args?.join(" ") || ""}`);
-	await import_exec.exec(command, args, options);
-}
-
-//#endregion
-//#region shared/src/lsp.ts
-/**
-* Build the LSP from vscode-stylelint source.
-* Downloads, builds, and copies the language server to the specified output path.
-*/
-async function buildLsp(version, outputPath = "lsp") {
-	const tag = version;
-	(0, import_core.info)(`Building LSP version ${version} (${tag})`);
-	const tempDir = await mkdtemp(join(tmpdir(), "vscode-stylelint-"));
-	(0, import_core.info)(`Build directory: ${tempDir}`);
-	try {
-		(0, import_core.info)("Cloning vscode-stylelint repository...");
-		await execWithLog("git", [
-			"clone",
-			"--depth",
-			"1",
-			"--branch",
-			tag,
-			"https://github.com/stylelint/vscode-stylelint.git",
-			tempDir
-		]);
-		const packageJsonPath = join(tempDir, "package.json");
-		try {
-			await access(packageJsonPath);
-		} catch {
-			throw new Error(`package.json not found in cloned repository at ${tag}`);
-		}
-		(0, import_core.info)("Installing npm dependencies...");
-		await execWithLog("npm", ["ci"], {
-			cwd: tempDir,
-			env: {
-				...process.env,
-				npm_config_cache: join(tempDir, ".npm-cache")
-			}
-		});
-		(0, import_core.info)("Building language server bundle...");
-		await execWithLog("npm", ["run", "build-bundle"], { cwd: tempDir });
-		const distPath = join(tempDir, "dist");
-		try {
-			if (!(await stat(distPath)).isDirectory()) throw new Error("dist is not a directory");
-		} catch {
-			throw new Error(`dist directory not found after build at ${distPath}`);
-		}
-		(0, import_core.info)(`Built files in dist/: ${(await readdir(distPath)).join(", ")}`);
-		(0, import_core.info)(`Cleaning ${outputPath}/ directory...`);
-		await (0, import_io.rmRF)(outputPath);
-		(0, import_core.info)(`Copying built files to ${outputPath}/...`);
-		await (0, import_io.cp)(distPath, outputPath, {
-			recursive: true,
-			force: true
-		});
-		const lspFiles = await readdir(outputPath);
-		(0, import_core.info)(`Files in ${outputPath}/: ${lspFiles.join(", ")}`);
-		if (lspFiles.length === 0) throw new Error(`No files copied to ${outputPath}/`);
-		return {
-			lspPath: outputPath,
-			files: lspFiles
-		};
-	} finally {
-		(0, import_core.info)("Cleaning up build directory...");
-		await (0, import_io.rmRF)(tempDir);
-	}
-}
 
 //#endregion
 //#region publish-release/index.ts
@@ -23765,80 +23696,61 @@ async function promotePrerelease(octokit, owner, repo, releaseId, version, body)
 		url: release.html_url
 	};
 }
-async function createReleaseFromScratch(octokit, owner, repo, version, lspVersion, body) {
-	await buildLsp(lspVersion);
-	const tarName = `stylelint-language-server-v${lspVersion}.tar.gz`;
-	(0, import_core.info)(`Creating ${tarName}...`);
-	execSync(`tar -czf "${tarName}" lsp/`);
-	const shaName = `stylelint-language-server-v${lspVersion}.sha256`;
-	(0, import_core.info)(`Creating ${shaName}...`);
-	await writeFile(shaName, execSync(`sha256sum "${tarName}"`).toString());
-	(0, import_core.info)(`Creating release v${version}...`);
-	const { data: release } = await octokit.rest.repos.createRelease({
+async function verifyLspUpdateCommit(octokit, owner, repo, sha) {
+	(0, import_core.info)(`Verifying commit ${sha}...`);
+	const { data: commit } = await octokit.rest.repos.getCommit({
 		owner,
 		repo,
-		tag_name: version,
-		name: `v${version}`,
-		body,
-		draft: false,
-		prerelease: false
+		ref: sha
 	});
-	(0, import_core.info)(`Created release: ${release.html_url}`);
-	(0, import_core.info)(`Uploading ${tarName}...`);
-	const tarData = await readFile(tarName);
-	await octokit.rest.repos.uploadReleaseAsset({
-		owner,
-		repo,
-		release_id: release.id,
-		name: tarName,
-		data: tarData,
-		headers: { "content-type": "application/gzip" }
-	});
-	(0, import_core.info)(`Uploading ${shaName}...`);
-	const shaData = await readFile(shaName, "utf-8");
-	await octokit.rest.repos.uploadReleaseAsset({
-		owner,
-		repo,
-		release_id: release.id,
-		name: shaName,
-		data: shaData,
-		headers: { "content-type": "text/plain" }
-	});
-	await rm(tarName, { force: true });
-	await rm(shaName, { force: true });
-	await rm("lsp", {
-		recursive: true,
-		force: true
-	});
-	(0, import_core.info)(`✅ Release v${version} complete`);
+	const author = commit.commit.author?.name;
+	const message = commit.commit.message;
+	(0, import_core.info)(`Commit author: ${author}`);
+	(0, import_core.info)(`Commit message: ${message.split("\n")[0]}`);
+	if (author !== "github-actions[bot]") return {
+		isValid: false,
+		message: `Skipping: Commit author is '${author}', expected 'github-actions[bot]'`
+	};
+	if (!message.startsWith("chore: update language server to")) return {
+		isValid: false,
+		message: `Skipping: Commit message doesn't match LSP update pattern`
+	};
 	return {
-		id: release.id,
-		url: release.html_url
+		isValid: true,
+		message: "Commit verified as LSP update"
 	};
 }
 async function run() {
 	try {
 		const octokit = (0, import_github.getOctokit)((0, import_core.getInput)("github-token", { required: true }));
 		const { owner, repo } = import_github.context.repo;
+		const sha = import_github.context.sha;
+		const verification = await verifyLspUpdateCommit(octokit, owner, repo, sha);
+		if (!verification.isValid) {
+			(0, import_core.info)(verification.message);
+			(0, import_core.setOutput)("skipped", "true");
+			(0, import_core.setOutput)("reason", verification.message);
+			return;
+		}
+		(0, import_core.info)(verification.message);
 		const extensionToml = await readExtensionToml();
 		const version = extensionToml.version;
 		const lspVersion = getLspVersion(extensionToml);
 		(0, import_core.info)(`Extension version: ${version}`);
 		(0, import_core.info)(`LSP version: ${lspVersion}`);
-		const body = await getReleaseBody(version);
 		const prerelease = await findPrerelease(octokit, owner, repo, version);
-		let result;
-		let promoted;
-		if (prerelease) {
-			result = await promotePrerelease(octokit, owner, repo, prerelease.id, version, body);
-			promoted = true;
-		} else {
-			result = await createReleaseFromScratch(octokit, owner, repo, version, lspVersion, body);
-			promoted = false;
+		if (!prerelease) {
+			(0, import_core.info)(`No prerelease found for v${version}. Skipping promotion.`);
+			(0, import_core.setOutput)("skipped", "true");
+			(0, import_core.setOutput)("reason", "No prerelease found for this version");
+			return;
 		}
+		const body = await getReleaseBody(version);
+		const result = await promotePrerelease(octokit, owner, repo, prerelease.id, version, body);
+		(0, import_core.setOutput)("skipped", "false");
+		(0, import_core.setOutput)("promoted", "true");
 		(0, import_core.setOutput)("release-id", result.id.toString());
 		(0, import_core.setOutput)("release-url", result.url);
-		(0, import_core.setOutput)("promoted", promoted.toString());
 	} catch (error) {
 		(0, import_core.setFailed)(error instanceof Error ? error.message : "Unknown error");
 	}

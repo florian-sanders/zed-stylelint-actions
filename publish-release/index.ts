@@ -146,11 +146,65 @@ async function createReleaseFromScratch(
   return { id: release.id, url: release.html_url };
 }
 
+async function verifyLspUpdateCommit(
+  octokit: ReturnType<typeof getOctokit>,
+  owner: string,
+  repo: string,
+  sha: string
+): Promise<{ isValid: boolean; message: string }> {
+  info(`Verifying commit ${sha}...`);
+
+  const { data: commit } = await octokit.rest.repos.getCommit({
+    owner,
+    repo,
+    ref: sha
+  });
+
+  const author = commit.commit.author?.name;
+  const message = commit.commit.message;
+
+  info(`Commit author: ${author}`);
+  info(`Commit message: ${message.split('\n')[0]}`);
+
+  // Check author
+  if (author !== 'github-actions[bot]') {
+    return {
+      isValid: false,
+      message: `Skipping: Commit author is '${author}', expected 'github-actions[bot]'`
+    };
+  }
+
+  // Check message pattern
+  if (!message.startsWith('chore: update language server to')) {
+    return {
+      isValid: false,
+      message: `Skipping: Commit message doesn't match LSP update pattern`
+    };
+  }
+
+  return { isValid: true, message: 'Commit verified as LSP update' };
+}
+
 async function run(): Promise<void> {
   try {
     const token = getInput('github-token', { required: true });
     const octokit = getOctokit(token);
     const { owner, repo } = context.repo;
+
+    // Get the commit SHA from context
+    const sha = context.sha;
+
+    // Verify this is an LSP update commit
+    const verification = await verifyLspUpdateCommit(octokit, owner, repo, sha);
+
+    if (!verification.isValid) {
+      info(verification.message);
+      setOutput('skipped', 'true');
+      setOutput('reason', verification.message);
+      return;
+    }
+
+    info(verification.message);
 
     // Read versions from extension.toml
     const extensionToml = await readExtensionToml();
@@ -160,26 +214,26 @@ async function run(): Promise<void> {
     info(`Extension version: ${version}`);
     info(`LSP version: ${lspVersion}`);
 
-    // Get release body from CHANGELOG.md
-    const body = await getReleaseBody(version);
-
     // Check for existing prerelease
     const prerelease = await findPrerelease(octokit, owner, repo, version);
 
-    let result: { id: number; url: string };
-    let promoted: boolean;
-
-    if (prerelease) {
-      result = await promotePrerelease(octokit, owner, repo, prerelease.id, version, body);
-      promoted = true;
-    } else {
-      result = await createReleaseFromScratch(octokit, owner, repo, version, lspVersion, body);
-      promoted = false;
+    if (!prerelease) {
+      info(`No prerelease found for v${version}. Skipping promotion.`);
+      setOutput('skipped', 'true');
+      setOutput('reason', 'No prerelease found for this version');
+      return;
     }
 
+    // Get release body from CHANGELOG.md
+    const body = await getReleaseBody(version);
+
+    // Promote the prerelease
+    const result = await promotePrerelease(octokit, owner, repo, prerelease.id, version, body);
+
+    setOutput('skipped', 'false');
+    setOutput('promoted', 'true');
     setOutput('release-id', result.id.toString());
     setOutput('release-url', result.url);
-    setOutput('promoted', promoted.toString());
 
   } catch (error) {
     setFailed(error instanceof Error ? error.message : 'Unknown error');
