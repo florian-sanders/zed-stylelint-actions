@@ -23804,15 +23804,18 @@ async function commitChanges(version) {
 		"user.email",
 		"github-actions[bot]@users.noreply.github.com"
 	]);
-	(0, import_core.info)("Staging changes...");
-	await (0, import_exec.exec)("git", [
-		"add",
+	const filesToStage = [
 		"extension.toml",
 		"Cargo.toml",
 		"Cargo.lock",
-		"src/config.rs",
 		"lsp/"
-	], { ignoreReturnCode: true });
+	];
+	try {
+		await access("src/config.rs");
+		filesToStage.push("src/config.rs");
+	} catch {}
+	(0, import_core.info)("Staging changes...");
+	await (0, import_exec.exec)("git", ["add", ...filesToStage]);
 	if (await (0, import_exec.exec)("git", [
 		"diff",
 		"--cached",

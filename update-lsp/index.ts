@@ -111,8 +111,17 @@ async function commitChanges(version: string): Promise<boolean> {
   await exec('git', ['config', 'user.name', 'github-actions[bot]']);
   await exec('git', ['config', 'user.email', 'github-actions[bot]@users.noreply.github.com']);
 
+  // Determine which files exist and need staging
+  const filesToStage = ['extension.toml', 'Cargo.toml', 'Cargo.lock', 'lsp/'];
+  try {
+    await access('src/config.rs');
+    filesToStage.push('src/config.rs');
+  } catch {
+    // config.rs doesn't exist, skip
+  }
+
   info('Staging changes...');
-  await exec('git', ['add', 'extension.toml', 'Cargo.toml', 'Cargo.lock', 'src/config.rs', 'lsp/'], { ignoreReturnCode: true });
+  await exec('git', ['add', ...filesToStage]);
 
   // Check if there are changes
   const exitCode = await exec('git', ['diff', '--cached', '--quiet'], { ignoreReturnCode: true });
