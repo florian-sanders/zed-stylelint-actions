@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
-import * as os from "os";
-import * as path from "path";
-import * as fs from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
+import { access, mkdtemp, readdir, stat } from "fs/promises";
 
 //#region \0rolldown/runtime.js
 var __create = Object.create;
@@ -102,7 +102,7 @@ var require_command = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.issue = exports.issueCommand = void 0;
-	const os$4 = __importStar(__require("os"));
+	const os$3 = __importStar(__require("os"));
 	const utils_1 = require_utils$1();
 	/**
 	* Commands
@@ -116,7 +116,7 @@ var require_command = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*/
 	function issueCommand(command, properties, message) {
 		const cmd = new Command(command, properties, message);
-		process.stdout.write(cmd.toString() + os$4.EOL);
+		process.stdout.write(cmd.toString() + os$3.EOL);
 	}
 	exports.issueCommand = issueCommand;
 	function issue(name, message = "") {
@@ -194,14 +194,14 @@ var require_file_command = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.prepareKeyValueMessage = exports.issueFileCommand = void 0;
 	const crypto = __importStar(__require("crypto"));
-	const fs$2 = __importStar(__require("fs"));
-	const os$3 = __importStar(__require("os"));
+	const fs$1 = __importStar(__require("fs"));
+	const os$2 = __importStar(__require("os"));
 	const utils_1 = require_utils$1();
 	function issueFileCommand(command, message) {
 		const filePath = process.env[`GITHUB_${command}`];
 		if (!filePath) throw new Error(`Unable to find environment variable for file command ${command}`);
-		if (!fs$2.existsSync(filePath)) throw new Error(`Missing file at path: ${filePath}`);
-		fs$2.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os$3.EOL}`, { encoding: "utf8" });
+		if (!fs$1.existsSync(filePath)) throw new Error(`Missing file at path: ${filePath}`);
+		fs$1.appendFileSync(filePath, `${(0, utils_1.toCommandValue)(message)}${os$2.EOL}`, { encoding: "utf8" });
 	}
 	exports.issueFileCommand = issueFileCommand;
 	function prepareKeyValueMessage(key, value) {
@@ -209,7 +209,7 @@ var require_file_command = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const convertedValue = (0, utils_1.toCommandValue)(value);
 		if (key.includes(delimiter)) throw new Error(`Unexpected input: name should not contain the delimiter "${delimiter}"`);
 		if (convertedValue.includes(delimiter)) throw new Error(`Unexpected input: value should not contain the delimiter "${delimiter}"`);
-		return `${key}<<${delimiter}${os$3.EOL}${convertedValue}${os$3.EOL}${delimiter}`;
+		return `${key}<<${delimiter}${os$2.EOL}${convertedValue}${os$2.EOL}${delimiter}`;
 	}
 	exports.prepareKeyValueMessage = prepareKeyValueMessage;
 }));
@@ -15482,7 +15482,7 @@ var require_path_utils = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.toPlatformPath = exports.toWin32Path = exports.toPosixPath = void 0;
-	const path$5 = __importStar(__require("path"));
+	const path$4 = __importStar(__require("path"));
 	/**
 	* toPosixPath converts the given path to the posix form. On Windows, \\ will be
 	* replaced with /.
@@ -15514,7 +15514,7 @@ var require_path_utils = /* @__PURE__ */ __commonJSMin(((exports) => {
 	* @return string The platform-specific path.
 	*/
 	function toPlatformPath(pth) {
-		return pth.replace(/[/\\]/g, path$5.sep);
+		return pth.replace(/[/\\]/g, path$4.sep);
 	}
 	exports.toPlatformPath = toPlatformPath;
 }));
@@ -15581,12 +15581,12 @@ var require_io_util = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var _a;
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.getCmdPath = exports.tryGetExecutablePath = exports.isRooted = exports.isDirectory = exports.exists = exports.READONLY = exports.UV_FS_O_EXLOCK = exports.IS_WINDOWS = exports.unlink = exports.symlink = exports.stat = exports.rmdir = exports.rm = exports.rename = exports.readlink = exports.readdir = exports.open = exports.mkdir = exports.lstat = exports.copyFile = exports.chmod = void 0;
-	const fs$1 = __importStar(__require("fs"));
-	const path$4 = __importStar(__require("path"));
-	_a = fs$1.promises, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.open = _a.open, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rm = _a.rm, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
+	const fs = __importStar(__require("fs"));
+	const path$3 = __importStar(__require("path"));
+	_a = fs.promises, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.open = _a.open, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rm = _a.rm, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
 	exports.IS_WINDOWS = process.platform === "win32";
 	exports.UV_FS_O_EXLOCK = 268435456;
-	exports.READONLY = fs$1.constants.O_RDONLY;
+	exports.READONLY = fs.constants.O_RDONLY;
 	function exists(fsPath) {
 		return __awaiter(this, void 0, void 0, function* () {
 			try {
@@ -15632,7 +15632,7 @@ var require_io_util = /* @__PURE__ */ __commonJSMin(((exports) => {
 			}
 			if (stats && stats.isFile()) {
 				if (exports.IS_WINDOWS) {
-					const upperExt = path$4.extname(filePath).toUpperCase();
+					const upperExt = path$3.extname(filePath).toUpperCase();
 					if (extensions.some((validExt) => validExt.toUpperCase() === upperExt)) return filePath;
 				} else if (isUnixExecutable(stats)) return filePath;
 			}
@@ -15648,10 +15648,10 @@ var require_io_util = /* @__PURE__ */ __commonJSMin(((exports) => {
 				if (stats && stats.isFile()) {
 					if (exports.IS_WINDOWS) {
 						try {
-							const directory = path$4.dirname(filePath);
-							const upperName = path$4.basename(filePath).toUpperCase();
+							const directory = path$3.dirname(filePath);
+							const upperName = path$3.basename(filePath).toUpperCase();
 							for (const actualName of yield exports.readdir(directory)) if (upperName === actualName.toUpperCase()) {
-								filePath = path$4.join(directory, actualName);
+								filePath = path$3.join(directory, actualName);
 								break;
 							}
 						} catch (err) {
@@ -15745,7 +15745,7 @@ var require_io = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.findInPath = exports.which = exports.mkdirP = exports.rmRF = exports.mv = exports.cp = void 0;
 	const assert_1 = __require("assert");
-	const path$3 = __importStar(__require("path"));
+	const path$2 = __importStar(__require("path"));
 	const ioUtil = __importStar(require_io_util());
 	/**
 	* Copies a file or folder.
@@ -15760,12 +15760,12 @@ var require_io = /* @__PURE__ */ __commonJSMin(((exports) => {
 			const { force, recursive, copySourceDirectory } = readCopyOptions(options);
 			const destStat = (yield ioUtil.exists(dest)) ? yield ioUtil.stat(dest) : null;
 			if (destStat && destStat.isFile() && !force) return;
-			const newDest = destStat && destStat.isDirectory() && copySourceDirectory ? path$3.join(dest, path$3.basename(source)) : dest;
+			const newDest = destStat && destStat.isDirectory() && copySourceDirectory ? path$2.join(dest, path$2.basename(source)) : dest;
 			if (!(yield ioUtil.exists(source))) throw new Error(`no such file or directory: ${source}`);
 			if ((yield ioUtil.stat(source)).isDirectory()) if (!recursive) throw new Error(`Failed to copy. ${source} is a directory, but tried to copy without recursive flag.`);
 			else yield cpDirRecursive(source, newDest, 0, force);
 			else {
-				if (path$3.relative(source, newDest) === "") throw new Error(`'${newDest}' and '${source}' are the same file`);
+				if (path$2.relative(source, newDest) === "") throw new Error(`'${newDest}' and '${source}' are the same file`);
 				yield copyFile(source, newDest, force);
 			}
 		});
@@ -15783,13 +15783,13 @@ var require_io = /* @__PURE__ */ __commonJSMin(((exports) => {
 			if (yield ioUtil.exists(dest)) {
 				let destExists = true;
 				if (yield ioUtil.isDirectory(dest)) {
-					dest = path$3.join(dest, path$3.basename(source));
+					dest = path$2.join(dest, path$2.basename(source));
 					destExists = yield ioUtil.exists(dest);
 				}
 				if (destExists) if (options.force == null || options.force) yield rmRF(dest);
 				else throw new Error("Destination already exists");
 			}
-			yield mkdirP(path$3.dirname(dest));
+			yield mkdirP(path$2.dirname(dest));
 			yield ioUtil.rename(source, dest);
 		});
 	}
@@ -15864,21 +15864,21 @@ var require_io = /* @__PURE__ */ __commonJSMin(((exports) => {
 			if (!tool) throw new Error("parameter 'tool' is required");
 			const extensions = [];
 			if (ioUtil.IS_WINDOWS && process.env["PATHEXT"]) {
-				for (const extension of process.env["PATHEXT"].split(path$3.delimiter)) if (extension) extensions.push(extension);
+				for (const extension of process.env["PATHEXT"].split(path$2.delimiter)) if (extension) extensions.push(extension);
 			}
 			if (ioUtil.isRooted(tool)) {
 				const filePath = yield ioUtil.tryGetExecutablePath(tool, extensions);
 				if (filePath) return [filePath];
 				return [];
 			}
-			if (tool.includes(path$3.sep)) return [];
+			if (tool.includes(path$2.sep)) return [];
 			const directories = [];
 			if (process.env.PATH) {
-				for (const p of process.env.PATH.split(path$3.delimiter)) if (p) directories.push(p);
+				for (const p of process.env.PATH.split(path$2.delimiter)) if (p) directories.push(p);
 			}
 			const matches = [];
 			for (const directory of directories) {
-				const filePath = yield ioUtil.tryGetExecutablePath(path$3.join(directory, tool), extensions);
+				const filePath = yield ioUtil.tryGetExecutablePath(path$2.join(directory, tool), extensions);
 				if (filePath) matches.push(filePath);
 			}
 			return matches;
@@ -15987,10 +15987,10 @@ var require_toolrunner = /* @__PURE__ */ __commonJSMin(((exports) => {
 	};
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.argStringToArray = exports.ToolRunner = void 0;
-	const os$2 = __importStar(__require("os"));
+	const os$1 = __importStar(__require("os"));
 	const events = __importStar(__require("events"));
 	const child = __importStar(__require("child_process"));
-	const path$2 = __importStar(__require("path"));
+	const path$1 = __importStar(__require("path"));
 	const io = __importStar(require_io());
 	const ioUtil = __importStar(require_io_util());
 	const timers_1 = __require("timers");
@@ -16029,11 +16029,11 @@ var require_toolrunner = /* @__PURE__ */ __commonJSMin(((exports) => {
 		_processLineBuffer(data, strBuffer, onLine) {
 			try {
 				let s = strBuffer + data.toString();
-				let n = s.indexOf(os$2.EOL);
+				let n = s.indexOf(os$1.EOL);
 				while (n > -1) {
 					onLine(s.substring(0, n));
-					s = s.substring(n + os$2.EOL.length);
-					n = s.indexOf(os$2.EOL);
+					s = s.substring(n + os$1.EOL.length);
+					n = s.indexOf(os$1.EOL);
 				}
 				return s;
 			} catch (err) {
@@ -16166,14 +16166,14 @@ var require_toolrunner = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*/
 		exec() {
 			return __awaiter(this, void 0, void 0, function* () {
-				if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) this.toolPath = path$2.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+				if (!ioUtil.isRooted(this.toolPath) && (this.toolPath.includes("/") || IS_WINDOWS && this.toolPath.includes("\\"))) this.toolPath = path$1.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
 				this.toolPath = yield io.which(this.toolPath, true);
 				return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
 					this._debug(`exec tool: ${this.toolPath}`);
 					this._debug("arguments:");
 					for (const arg of this.args) this._debug(`   ${arg}`);
 					const optionsNonNull = this._cloneExecOptions(this.options);
-					if (!optionsNonNull.silent && optionsNonNull.outStream) optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os$2.EOL);
+					if (!optionsNonNull.silent && optionsNonNull.outStream) optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os$1.EOL);
 					const state = new ExecState(optionsNonNull, this.toolPath);
 					state.on("debug", (message) => {
 						this._debug(message);
@@ -16635,8 +16635,8 @@ var require_core = /* @__PURE__ */ __commonJSMin(((exports) => {
 	const command_1 = require_command();
 	const file_command_1 = require_file_command();
 	const utils_1 = require_utils$1();
-	const os$1 = __importStar(__require("os"));
-	const path$1 = __importStar(__require("path"));
+	const os = __importStar(__require("os"));
+	const path = __importStar(__require("path"));
 	const oidc_utils_1 = require_oidc_utils();
 	/**
 	* The code to exit an action
@@ -16679,7 +16679,7 @@ var require_core = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function addPath(inputPath) {
 		if (process.env["GITHUB_PATH"] || "") (0, file_command_1.issueFileCommand)("PATH", inputPath);
 		else (0, command_1.issueCommand)("add-path", {}, inputPath);
-		process.env["PATH"] = `${inputPath}${path$1.delimiter}${process.env["PATH"]}`;
+		process.env["PATH"] = `${inputPath}${path.delimiter}${process.env["PATH"]}`;
 	}
 	exports.addPath = addPath;
 	/**
@@ -16747,7 +16747,7 @@ var require_core = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*/
 	function setOutput(name, value) {
 		if (process.env["GITHUB_OUTPUT"] || "") return (0, file_command_1.issueFileCommand)("OUTPUT", (0, file_command_1.prepareKeyValueMessage)(name, value));
-		process.stdout.write(os$1.EOL);
+		process.stdout.write(os.EOL);
 		(0, command_1.issueCommand)("set-output", { name }, (0, utils_1.toCommandValue)(value));
 	}
 	exports.setOutput = setOutput;
@@ -16817,7 +16817,7 @@ var require_core = /* @__PURE__ */ __commonJSMin(((exports) => {
 	* @param message info message
 	*/
 	function info(message) {
-		process.stdout.write(message + os$1.EOL);
+		process.stdout.write(message + os.EOL);
 	}
 	exports.info = info;
 	/**
@@ -16936,7 +16936,6 @@ var require_core = /* @__PURE__ */ __commonJSMin(((exports) => {
 
 //#endregion
 //#region shared/src/exec.ts
-var import_io = /* @__PURE__ */ __toESM(require_io(), 1);
 var import_exec = /* @__PURE__ */ __toESM(require_exec(), 1);
 var import_core = /* @__PURE__ */ __toESM(require_core(), 1);
 async function execWithLog(command, args, options) {
@@ -16962,103 +16961,116 @@ async function getExecOutput(command, args, options) {
 }
 
 //#endregion
+//#region shared/src/lsp.ts
+var import_io = require_io();
+/**
+* Build the LSP from vscode-stylelint source.
+* Downloads, builds, and copies the language server to the specified output path.
+*/
+async function buildLsp(version, outputPath = "lsp") {
+	const tag = version;
+	(0, import_core.info)(`Building LSP version ${version} (${tag})`);
+	const tempDir = await mkdtemp(join(tmpdir(), "vscode-stylelint-"));
+	(0, import_core.info)(`Build directory: ${tempDir}`);
+	try {
+		(0, import_core.info)("Cloning vscode-stylelint repository...");
+		await execWithLog("git", [
+			"clone",
+			"--depth",
+			"1",
+			"--branch",
+			tag,
+			"https://github.com/stylelint/vscode-stylelint.git",
+			tempDir
+		]);
+		const packageJsonPath = join(tempDir, "package.json");
+		try {
+			await access(packageJsonPath);
+		} catch {
+			throw new Error(`package.json not found in cloned repository at ${tag}`);
+		}
+		(0, import_core.info)("Installing npm dependencies...");
+		await execWithLog("npm", ["ci"], {
+			cwd: tempDir,
+			env: {
+				...process.env,
+				npm_config_cache: join(tempDir, ".npm-cache")
+			}
+		});
+		(0, import_core.info)("Building language server bundle...");
+		await execWithLog("npm", ["run", "build-bundle"], { cwd: tempDir });
+		const distPath = join(tempDir, "dist");
+		try {
+			if (!(await stat(distPath)).isDirectory()) throw new Error("dist is not a directory");
+		} catch {
+			throw new Error(`dist directory not found after build at ${distPath}`);
+		}
+		(0, import_core.info)(`Built files in dist/: ${(await readdir(distPath)).join(", ")}`);
+		(0, import_core.info)(`Cleaning ${outputPath}/ directory...`);
+		await (0, import_io.rmRF)(outputPath);
+		(0, import_core.info)(`Copying built files to ${outputPath}/...`);
+		await (0, import_io.cp)(distPath, outputPath, {
+			recursive: true,
+			force: true
+		});
+		const lspFiles = await readdir(outputPath);
+		(0, import_core.info)(`Files in ${outputPath}/: ${lspFiles.join(", ")}`);
+		if (lspFiles.length === 0) throw new Error(`No files copied to ${outputPath}/`);
+		return {
+			lspPath: outputPath,
+			files: lspFiles
+		};
+	} finally {
+		(0, import_core.info)("Cleaning up build directory...");
+		await (0, import_io.rmRF)(tempDir);
+	}
+}
+
+//#endregion
 //#region build-lsp/index.ts
 async function run() {
 	try {
-		const version = import_core.getInput("version", { required: true });
-		const gitUserName = import_core.getInput("git-user-name");
-		const gitUserEmail = import_core.getInput("git-user-email");
-		const tag = version;
-		import_core.info(`Building LSP version ${version} (${tag})`);
-		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vscode-stylelint-"));
-		import_core.info(`Build directory: ${tempDir}`);
-		try {
-			import_core.info("Cloning vscode-stylelint repository...");
+		const version = (0, import_core.getInput)("version", { required: true });
+		const gitUserName = (0, import_core.getInput)("git-user-name");
+		const gitUserEmail = (0, import_core.getInput)("git-user-email");
+		const { lspPath } = await buildLsp(version);
+		(0, import_core.info)("Configuring git...");
+		await execWithLog("git", [
+			"config",
+			"user.name",
+			gitUserName
+		]);
+		await execWithLog("git", [
+			"config",
+			"user.email",
+			gitUserEmail
+		]);
+		(0, import_core.info)("Staging changes...");
+		await execWithLog("git", ["add", lspPath]);
+		if (!await getExecOutput("git", [
+			"status",
+			"--porcelain",
+			lspPath
+		])) {
+			(0, import_core.info)("No changes to commit (LSP files identical)");
+			(0, import_core.setOutput)("committed", "false");
+		} else {
+			(0, import_core.info)("Committing changes...");
 			await execWithLog("git", [
-				"clone",
-				"--depth",
-				"1",
-				"--branch",
-				tag,
-				"https://github.com/stylelint/vscode-stylelint.git",
-				tempDir
+				"commit",
+				"-m",
+				`chore: update language server to v${version}`,
+				"-m",
+				`Update vscode-stylelint language server to v${version}`,
+				"-m",
+				"Built from https://github.com/stylelint/vscode-stylelint"
 			]);
-			const packageJsonPath = path.join(tempDir, "package.json");
-			try {
-				await fs.access(packageJsonPath);
-			} catch {
-				throw new Error(`package.json not found in cloned repository at ${tag}`);
-			}
-			import_core.info("Installing npm dependencies...");
-			await execWithLog("npm", ["ci"], {
-				cwd: tempDir,
-				env: {
-					...process.env,
-					npm_config_cache: path.join(tempDir, ".npm-cache")
-				}
-			});
-			import_core.info("Building language server bundle...");
-			await execWithLog("npm", ["run", "build-bundle"], { cwd: tempDir });
-			const distPath = path.join(tempDir, "dist");
-			try {
-				if (!(await fs.stat(distPath)).isDirectory()) throw new Error("dist is not a directory");
-			} catch {
-				throw new Error(`dist directory not found after build at ${distPath}`);
-			}
-			const distFiles = await fs.readdir(distPath);
-			import_core.info(`Built files in dist/: ${distFiles.join(", ")}`);
-			const lspPath = "lsp";
-			import_core.info(`Cleaning ${lspPath}/ directory...`);
-			await import_io.rmRF(lspPath);
-			import_core.info(`Copying built files to ${lspPath}/...`);
-			await import_io.cp(distPath, lspPath, {
-				recursive: true,
-				force: true
-			});
-			const lspFiles = await fs.readdir(lspPath);
-			import_core.info(`Files in ${lspPath}/: ${lspFiles.join(", ")}`);
-			if (lspFiles.length === 0) throw new Error(`No files copied to ${lspPath}/`);
-			import_core.info("Configuring git...");
-			await execWithLog("git", [
-				"config",
-				"user.name",
-				gitUserName
-			]);
-			await execWithLog("git", [
-				"config",
-				"user.email",
-				gitUserEmail
-			]);
-			import_core.info("Staging changes...");
-			await execWithLog("git", ["add", lspPath]);
-			if (!await getExecOutput("git", [
-				"status",
-				"--porcelain",
-				lspPath
-			])) {
-				import_core.info("No changes to commit (LSP files identical)");
-				import_core.setOutput("committed", "false");
-			} else {
-				import_core.info("Committing changes...");
-				await execWithLog("git", [
-					"commit",
-					"-m",
-					`chore: update language server to v${version}`,
-					"-m",
-					`Update vscode-stylelint language server to v${version}`,
-					"-m",
-					"Built from https://github.com/stylelint/vscode-stylelint"
-				]);
-				import_core.info("Successfully committed LSP changes");
-				import_core.setOutput("committed", "true");
-			}
-			import_core.setOutput("lsp-path", lspPath);
-		} finally {
-			import_core.info("Cleaning up build directory...");
-			await import_io.rmRF(tempDir);
+			(0, import_core.info)("Successfully committed LSP changes");
+			(0, import_core.setOutput)("committed", "true");
 		}
+		(0, import_core.setOutput)("lsp-path", lspPath);
 	} catch (error) {
-		import_core.setFailed(error instanceof Error ? error.message : "Unknown error");
+		(0, import_core.setFailed)(error instanceof Error ? error.message : "Unknown error");
 	}
 }
 run();

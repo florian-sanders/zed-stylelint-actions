@@ -5,10 +5,14 @@ import toml from 'toml';
 export interface ExtensionToml {
   version: string;
   language_servers?: {
-    'stylelint-lsp'?: {
+    [key: string]: {
       lsp_required_version?: string;
     };
   };
+}
+
+export function getLspVersion(toml: ExtensionToml): string {
+  return toml.language_servers?.['stylelint-lsp']?.lsp_required_version ?? toml.version;
 }
 
 export async function readExtensionToml(filePath = 'extension.toml'): Promise<ExtensionToml> {

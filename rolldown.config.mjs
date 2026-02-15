@@ -29,6 +29,5 @@ export default defineConfig([
   actionConfig("./build-lsp/index.ts"),
   actionConfig("./create-draft-release/index.ts"),
   actionConfig("./create-pull-request/index.ts"),
-  actionConfig("./promote-prerelease/index.ts"),
   actionConfig("./publish-release/index.ts"),
 ]);
