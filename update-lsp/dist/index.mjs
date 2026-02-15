@@ -23783,6 +23783,8 @@ async function updateVersionFiles(version) {
 	cargoToml = cargoToml.replace(/^(version\s*=\s*)"[^"]*"/m, `$1"${version}"`);
 	await writeFile("Cargo.toml", cargoToml);
 	(0, import_core.info)("Updated Cargo.toml");
+	await (0, import_exec.exec)("cargo", ["update", "--workspace"]);
+	(0, import_core.info)("Updated Cargo.lock");
 	try {
 		await access("src/config.rs");
 		let configRs = await readFile("src/config.rs", "utf-8");

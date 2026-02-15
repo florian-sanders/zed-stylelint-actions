@@ -87,6 +87,10 @@ async function updateVersionFiles(version: string): Promise<void> {
   await writeFile('Cargo.toml', cargoToml);
   info('Updated Cargo.toml');
 
+  // Update Cargo.lock to reflect the new version in Cargo.toml
+  await exec('cargo', ['update', '--workspace']);
+  info('Updated Cargo.lock');
+
   // Update config.rs if it exists
   try {
     await access('src/config.rs');
