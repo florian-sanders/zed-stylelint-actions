@@ -23,13 +23,30 @@ export async function getLatestLspRelease(octokit: Octokit): Promise<LspReleaseI
   };
 }
 
-export async function findOpenLspUpdatePr(octokit: Octokit, owner: string, repo: string): Promise<number | null> {
+export interface LspPrInfo {
+  number: number;
+  branch: string;
+  headSha: string;
+}
+
+export async function findOpenLspUpdatePr(octokit: Octokit, owner: string, repo: string): Promise<LspPrInfo | null> {
   const prs = await octokit.paginate(octokit.rest.pulls.list, {
     owner,
     repo,
     state: 'open',
   });
 
-  const lspPr = prs.find((pr: { head: { ref: string } }) => pr.head.ref.startsWith('update-lsp-'));
-  return lspPr ? lspPr.number : null;
+  const lspPr = prs.find((pr: { head: { ref: string; sha: string }; number: number }) =>
+    pr.head.ref.startsWith('update-lsp-')
+  );
+
+  if (!lspPr) {
+    return null;
+  }
+
+  return {
+    number: lspPr.number,
+    branch: lspPr.head.ref,
+    headSha: lspPr.head.sha,
+  };
 }

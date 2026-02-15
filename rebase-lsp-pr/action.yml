@@ -1,0 +1,20 @@
+name: 'Rebase LSP PR'
+description: 'Rebase an open LSP update PR onto main when main is updated'
+inputs:
+  github-token:
+    description: 'GitHub token'
+    required: true
+outputs:
+  found:
+    description: 'Whether an LSP update PR was found (true/false)'
+  pr-number:
+    description: 'The PR number if found'
+  branch:
+    description: 'The branch name if found'
+  rebased:
+    description: 'Whether rebase was performed (true/false)'
+  error:
+    description: 'Error message if rebase failed'
+runs:
+  using: 'node24'
+  main: 'dist/index.mjs'

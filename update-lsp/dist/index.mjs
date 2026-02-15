@@ -23654,7 +23654,12 @@ async function findOpenLspUpdatePr(octokit, owner, repo) {
 		repo,
 		state: "open"
 	})).find((pr) => pr.head.ref.startsWith("update-lsp-"));
-	return lspPr ? lspPr.number : null;
+	if (!lspPr) return null;
+	return {
+		number: lspPr.number,
+		branch: lspPr.head.ref,
+		headSha: lspPr.head.sha
+	};
 }
 
 //#endregion
