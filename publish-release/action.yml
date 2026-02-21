@@ -1,5 +1,5 @@
 name: 'Publish Release'
-description: 'Publish a release by promoting a prerelease or building from scratch'
+description: 'Promote a prerelease to a full release when an update-lsp PR is merged'
 inputs:
   github-token:
     description: 'GitHub token'
@@ -10,7 +10,11 @@ outputs:
   release-url:
     description: 'URL of the release'
   promoted:
-    description: 'Whether a prerelease was promoted (true) or built from scratch (false)'
+    description: 'Whether a prerelease was promoted'
+  skipped:
+    description: 'Whether the action was skipped'
+  reason:
+    description: 'Reason for skipping, if skipped'
 runs:
   using: 'node24'
   main: 'dist/index.mjs'

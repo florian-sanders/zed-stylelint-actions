@@ -1,7 +1,5 @@
 import { createRequire } from "node:module";
-import "os";
 import "path";
-import "child_process";
 import * as fs from "fs/promises";
 import { readFile } from "fs/promises";
 
@@ -23623,7 +23621,7 @@ var require_toml = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 //#endregion
 //#region shared/src/toml.ts
 var import_github = require_github();
-var import_core = /* @__PURE__ */ __toESM(require_core(), 1);
+var import_core = require_core();
 var import_toml = /* @__PURE__ */ __toESM(require_toml(), 1);
 function getLspVersion(toml) {
 	return toml.language_servers?.["stylelint-lsp"]?.lsp_required_version ?? toml.version;
@@ -23632,11 +23630,6 @@ async function readExtensionToml(filePath = "extension.toml") {
 	const content = await fs.readFile(filePath, "utf-8");
 	return import_toml.default.parse(content);
 }
-
-//#endregion
-//#region shared/src/exec.ts
-var import_io = require_io();
-var import_exec = /* @__PURE__ */ __toESM(require_exec(), 1);
 
 //#endregion
 //#region publish-release/index.ts
@@ -23690,49 +23683,44 @@ async function promotePrerelease(octokit, owner, repo, releaseId, version, body)
 		draft: false,
 		prerelease: false
 	});
-	(0, import_core.info)(`✅ Promoted release v${version}: ${release.html_url}`);
+	(0, import_core.info)(`Promoted release v${version}: ${release.html_url}`);
 	return {
 		id: release.id,
 		url: release.html_url
 	};
 }
-async function verifyLspUpdateCommit(octokit, owner, repo, sha) {
-	(0, import_core.info)(`Verifying commit ${sha}...`);
-	const { data: commit } = await octokit.rest.repos.getCommit({
-		owner,
-		repo,
-		ref: sha
-	});
-	const author = commit.commit.author?.name;
-	const message = commit.commit.message;
-	(0, import_core.info)(`Commit author: ${author}`);
-	(0, import_core.info)(`Commit message: ${message.split("\n")[0]}`);
-	if (author !== "github-actions[bot]") return {
-		isValid: false,
-		message: `Skipping: Commit author is '${author}', expected 'github-actions[bot]'`
-	};
-	if (!message.startsWith("chore: update language server to")) return {
-		isValid: false,
-		message: `Skipping: Commit message doesn't match LSP update pattern`
-	};
-	return {
-		isValid: true,
-		message: "Commit verified as LSP update"
-	};
+function isUpdateLspBranch(branchName) {
+	if (!branchName) return false;
+	return /^update-lsp-/.test(branchName);
 }
 async function run() {
 	try {
 		const octokit = (0, import_github.getOctokit)((0, import_core.getInput)("github-token", { required: true }));
 		const { owner, repo } = import_github.context.repo;
-		const sha = import_github.context.sha;
-		const verification = await verifyLspUpdateCommit(octokit, owner, repo, sha);
-		if (!verification.isValid) {
-			(0, import_core.info)(verification.message);
+		const eventName = import_github.context.eventName;
+		if (eventName === "pull_request") {
+			const pr = import_github.context.payload.pull_request;
+			if (!pr?.merged) {
+				(0, import_core.info)("PR was not merged, skipping");
+				(0, import_core.setOutput)("skipped", "true");
+				(0, import_core.setOutput)("reason", "PR was not merged");
+				return;
+			}
+			const headBranch = pr.head?.ref;
+			if (!isUpdateLspBranch(headBranch)) {
+				(0, import_core.info)(`PR branch '${headBranch}' is not an update-lsp-* branch, skipping`);
+				(0, import_core.setOutput)("skipped", "true");
+				(0, import_core.setOutput)("reason", `Not an update-lsp-* branch: ${headBranch}`);
+				return;
+			}
+			(0, import_core.info)(`PR merged from update-lsp branch: ${headBranch}`);
+		} else if (eventName === "workflow_dispatch") (0, import_core.info)("Manual trigger - will attempt to promote any existing prerelease");
+		else {
+			(0, import_core.info)(`Event '${eventName}' is not supported, skipping`);
 			(0, import_core.setOutput)("skipped", "true");
-			(0, import_core.setOutput)("reason", verification.message);
+			(0, import_core.setOutput)("reason", `Unsupported event: ${eventName}`);
 			return;
 		}
-		(0, import_core.info)(verification.message);
 		const extensionToml = await readExtensionToml();
 		const version = extensionToml.version;
 		const lspVersion = getLspVersion(extensionToml);
